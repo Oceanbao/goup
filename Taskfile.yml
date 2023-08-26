@@ -11,7 +11,6 @@ tasks:
     desc: Run full build process.
     cmds:
       - task: goaudit
-      - task: goci
       - task: gobuild
 
   goaudit:
