@@ -13,6 +13,12 @@ tasks:
       - task: goaudit
       - task: gobuild
 
+  gorun:
+    desc: Run the app.
+    cmds:
+      - task: goaudit
+      - go run ./cmd/app
+
   goaudit:
     desc: Run all audits.
     deps: [vendor]
