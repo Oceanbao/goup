@@ -9,9 +9,6 @@ vars:
   BINARY_NAME: app # Replace with your application's binary name
 
 tasks:
-  # Default task to run if no task is specified
-  # default: build
-
   confirm:
     cmds:
       - echo -n 'Are you sure? [y/N] ' && read ans && [ ${ans:-N} = y ]
@@ -79,7 +76,7 @@ tasks:
   gobuild-docker:
     desc: Build program in Dockerfile.
     cmds:
-      - CGO_ENABLED=0 go build -ldflags="{{.LINKER_FLAG}}" -o=./bin/app ./cmd/app
+      - CGO_ENABLED=0 go build -ldflags="{{.LINKER_FLAG}}" -o ./bin/{{.BINARY_NAME}} ./cmd/{{.BINARY_NAME}}
     vars:
       LINKER_FLAG: -s -w
 
