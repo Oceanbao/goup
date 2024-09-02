@@ -2,32 +2,19 @@ version: "3"
 
 dotenv: [".env"]
 
+# Variables used in tasks
+vars:
+  # GOOS: linux # You can override this based on your target platform
+  # GOARCH: amd64
+  BINARY_NAME: app # Replace with your application's binary name
+
 tasks:
+  # Default task to run if no task is specified
+  # default: build
+
   confirm:
     cmds:
       - echo -n 'Are you sure? [y/N] ' && read ans && [ ${ans:-N} = y ]
-
-  main:
-    desc: Run full build process.
-    cmds:
-      - task: goaudit
-      - task: gobuild
-
-  gorun:
-    desc: Run the app.
-    cmds:
-      - task: goaudit
-      - task: goci
-      - go run ./cmd/app
-
-  goaudit:
-    desc: Run all audits.
-    # deps: [vendor]
-    cmds:
-      - task: gomod
-      - task: goformat
-      - task: goimports
-      - task: govet
 
   gomod:
     desc: Check mod.
@@ -50,18 +37,44 @@ tasks:
     cmds:
       - go vet ./...
 
+  gocheck:
+    desc: Run all checks.
+    cmds:
+      - task: gomod
+      - task: goformat
+      - task: goimports
+      - task: govet
+
+  goci:
+    desc: Run golangci-lint.
+    cmds:
+      - golangci-lint run
+
+  default:
+    desc: Run the app.
+    cmds:
+      - task: gocheck
+      - task: goci
+      - go run ./cmd/{{.BINARY_NAME}}
+
+  goclean:
+    desc: Clean bin
+    cmds:
+      - rm -rf ./bin
+
   gobuild:
     desc: Build program.
-    cmds:
-      - task: gotest
-      - CGO_ENABLED=0 go build -ldflags="{{.LINKER_FLAG}}" -o=./bin/app ./cmd/app
-      # - GOOS=linux GOARCH=amd64 go build -ldflags="{{.LINKER_FLAG}}" -o=./bin/linux_amd64/app ./cmd/app
     vars:
       BUILD_TIME:
         sh: date -u +"%Y-%m-%dT%H:%M:%SZ"
       GIT_DESC:
         sh: git describe --always --dirty --tags --long
       LINKER_FLAG: -s -w -X main.buildTime={{.BUILD_TIME}} -X main.version={{.GIT_DESC}}
+    cmds:
+      - task: gotest
+      - task: goclean
+      # CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -ldflags="{{.LINKER_FLAG}}" -o ./bin/{{.BINARY_NAME}} ./cmd/{{.BINARY_NAME}}
+      - CGO_ENABLED=0 go build -ldflags="{{.LINKER_FLAG}}" -o ./bin/{{.BINARY_NAME}} ./cmd/{{.BINARY_NAME}}
 
   gobuild-docker:
     desc: Build program in Dockerfile.
@@ -70,7 +83,7 @@ tasks:
     vars:
       LINKER_FLAG: -s -w
 
-  vendor:
+  govendor:
     desc: Run vendor with mod tidy and verify.
     cmds:
       - task: gomod
@@ -81,7 +94,14 @@ tasks:
     cmds:
       - go test -race -vet=off ./...
 
-  goci:
-    desc: Run golangci-lint.
+  # Generate code if needed (e.g., using `go generate`)
+  gogen:
+    desc: "Run code generation tools"
     cmds:
-      - golangci-lint run
+      - go generate ./...
+
+  # Run the application with live reload using air (useful in development)
+  godev:
+    desc: "Run the application with live reload using air"
+    cmds:
+      - air
