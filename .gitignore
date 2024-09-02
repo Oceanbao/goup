@@ -20,6 +20,9 @@ vendor/
 
 # Go workspace file
 go.work
+# Ignore go.mod because clone will need to create anew.
+go.mod
 
 # Secrets
 .env
+
