@@ -68,6 +68,7 @@ tasks:
         sh: git describe --always --dirty --tags --long
       LINKER_FLAG: -s -w -X main.buildTime={{.BUILD_TIME}} -X main.version={{.GIT_DESC}}
     cmds:
+      - task: gocheck
       - task: gotest
       - task: goclean
       # CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -ldflags="{{.LINKER_FLAG}}" -o ./bin/{{.BINARY_NAME}} ./cmd/{{.BINARY_NAME}}
